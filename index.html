@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FIB Dashboard Ultimate</title>
+  <link rel="stylesheet" href="Dasbord.css" />
+</head>
+<body>
+  <div class="background-glow"></div>
+
+  <section id="authPage" class="auth-page active">
+    <div class="auth-box">
+      <div class="auth-left">
+        <div class="brand-icon">FIB</div>
+        <h1>FIB Dashboard Ultimate</h1>
+        <p>
+          Modernes Verwaltungs-Dashboard mit Mitarbeiterliste, Events,
+          Sanktionen, Vorlagen, Rollenverwaltung und Admin Panel.
+        </p>
+      </div>
+
+      <div class="auth-right">
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login')">Anmelden</button>
+          <button class="auth-tab" onclick="switchAuthTab('register')">Registrieren</button>
+        </div>
+
+        <div id="loginPanel" class="auth-panel active">
+          <h2>Login</h2>
+          <div class="field">
+            <label>Benutzername</label>
+            <input id="loginUsername" type="text" placeholder="Benutzername" />
+          </div>
+          <div class="field">
+            <label>Passwort</label>
+            <input id="loginPassword" type="password" placeholder="Passwort" />
+          </div>
+          <button class="btn btn-primary full" onclick="login()">Einloggen</button>
+          <p id="loginMsg" class="msg"></p>
+        </div>
+
+        <div id="registerPanel" class="auth-panel">
+          <h2>Registrieren</h2>
+          <div class="field">
+            <label>Benutzername</label>
+            <input id="registerUsername" type="text" placeholder="Benutzername" />
+          </div>
+          <div class="field">
+            <label>Passwort</label>
+            <input id="registerPassword" type="password" placeholder="Passwort" />
+          </div>
+          <div class="field">
+            <label>Rolle</label>
+            <select id="registerRole">
+              <option value="user">User</option>
+              <option value="moderator">Moderator</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button class="btn btn-primary full" onclick="register()">Account erstellen</button>
+          <p id="registerMsg" class="msg"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="appPage" class="app-page">
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-top">
+          <div class="logo-box">FIB</div>
+          <div>
+            <h2>Dashboard</h2>
+            <p>Ultimate Panel</p>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button class="nav-btn active" onclick="showSection('overviewSection', this)">Übersicht</button>
+          <button class="nav-btn" onclick="showSection('employeesSection', this)">Mitarbeiterliste</button>
+          <button class="nav-btn" onclick="showSection('addEmployeeSection', this)">Mitarbeiter eintragen</button>
+          <button class="nav-btn" onclick="showSection('eventsSection', this)">Events</button>
+          <button class="nav-btn" onclick="showSection('sanctionsSection', this)">Sanktionen</button>
+          <button class="nav-btn" onclick="showSection('templateSection', this)">Vorlagen</button>
+          <button class="nav-btn admin-only hidden" onclick="showSection('usersSection', this)">Benutzerverwaltung</button>
+          <button class="nav-btn admin-only hidden" onclick="showSection('activitySection', this)">Aktivitätslog</button>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="current-user-box">
+          <strong id="currentUserName">User</strong>
+          <span id="currentUserRole" class="badge">user</span>
+        </div>
+        <button class="btn btn-danger full" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h1>FIB Verwaltungs-Dashboard</h1>
+          <p>Mitarbeiter, Events, Sanktionen und Admin-Verwaltung</p>
+        </div>
+        <div class="topbar-actions">
+          <input id="globalSearch" type="text" placeholder="Mitarbeiter suchen..." oninput="renderEmployees()" />
+        </div>
+      </header>
+
+      <section id="overviewSection" class="content-section active">
+        <div class="cards-grid">
+          <div class="stat-card">
+            <h3>Gesamt Mitarbeiter</h3>
+            <p id="statEmployees">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Gesamt Benutzer</h3>
+            <p id="statUsers">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Gesamt Events</h3>
+            <p id="statEvents">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Gesamt Sanktionen</h3>
+            <p id="statSanctions">0</p>
+          </div>
+        </div>
+
+        <div class="overview-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Neueste Mitarbeiter</h2>
+            </div>
+            <div id="latestEmployees" class="list-box"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Neueste Events</h2>
+            </div>
+            <div id="latestEvents" class="list-box"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="employeesSection" class="content-section">
+        <div class="panel">
+          <div class="panel-head between">
+            <div>
+              <h2>Mitarbeiterliste</h2>
+              <p>Alle eingetragenen Mitarbeiter</p>
+            </div>
+            <div class="filters">
+              <select id="rankFilter" onchange="renderEmployees()">
+                <option value="">Alle Ränge</option>
+              </select>
+            </div>
+          </div>
+          <div id="employeesTableWrapper" class="table-wrapper"></div>
+        </div>
+      </section>
+
+      <section id="addEmployeeSection" class="content-section">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Mitarbeiter eintragen</h2>
+            <p>Fülle die Felder aus und speichere den Mitarbeiter.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label>Name</label>
+              <input id="empName" type="text" />
+            </div>
+
+            <div class="field">
+              <label>ID</label>
+              <input id="empId" type="text" />
+            </div>
+
+            <div class="field">
+              <label>DN</label>
+              <input id="empDn" type="text" />
+            </div>
+
+            <div class="field">
+              <label>Rang</label>
+              <select id="empRank">
+                <option value="">Bitte Rang wählen</option>
+                <option value="25 | Director of FIB">25 | Director of FIB</option>
+                <option value="24 | Deputy Director of FIB">24 | Deputy Director of FIB</option>
+                <option value="23 | Assistant Director of FIB">23 | Assistant Director of FIB</option>
+                <option value="22 | Management of FIB">22 | Management of FIB</option>
+                <option value="21 | Chief of Staff">21 | Chief of Staff</option>
+                <option value="20 | Commander">20 | Commander</option>
+                <option value="19 | Head of Department">19 | Head of Department</option>
+                <option value="18 | Deputy Head of Department">18 | Deputy Head of Department</option>
+                <option value="17 | Lead Special Agent">17 | Lead Special Agent</option>
+                <option value="16 | Agent 007">16 | Agent 007</option>
+                <option value="15 | Agent 006">15 | Agent 006</option>
+                <option value="14 | Special Advisor">14 | Special Advisor</option>
+                <option value="13 | Senior Corruption Agent">13 | Senior Corruption Agent</option>
+                <option value="12 | Senior GTF Agent">12 | Senior GTF Agent</option>
+                <option value="11 | Senior Special STF Agent">11 | Senior Special STF Agent</option>
+                <option value="10 | Special Recruiting Agent">10 | Special Recruiting Agent</option>
+                <option value="9 | Special Corruption Agent">9 | Special Corruption Agent</option>
+                <option value="8 | Special STF Agent">8 | Special STF Agent</option>
+                <option value="7 | Special GTF Agent">7 | Special GTF Agent</option>
+                <option value="6 | Supervisory Agent">6 | Supervisory Agent</option>
+                <option value="5 | Senior Special Agent">5 | Senior Special Agent</option>
+                <option value="4 | Special Agent">4 | Special Agent</option>
+                <option value="3 | Agent">3 | Agent</option>
+                <option value="2 | Agent in Education">2 | Agent in Education</option>
+                <option value="1 | Suspended">1 | Suspended</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Abteilung</label>
+              <select id="empDepartment">
+                <option value="">Bitte Abteilung wählen</option>
+                <option value="Human Resource">Human Resource</option>
+                <option value="DOC">DOC</option>
+                <option value="Special Task Force">Special Task Force</option>
+                <option value="Gang Task Force">Gang Task Force</option>
+                <option value="Direction">Direction</option>
+                <option value="Abteilungslos">Abteilungslos</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>DFunk</label>
+              <input id="empDfunk" type="text" />
+            </div>
+
+            <div class="field">
+              <label>Einführung</label>
+              <input id="empIntro" type="text" />
+            </div>
+
+            <div class="field">
+              <label>GA</label>
+              <input id="empGa" type="text" />
+            </div>
+
+            <div class="field">
+              <label>Ex Officer</label>
+              <input id="empExOfficer" type="text" />
+            </div>
+
+            <div class="field full-width">
+              <label>Beworben durch</label>
+              <input id="empAppliedBy" type="text" />
+            </div>
+
+            <div class="field full-width">
+              <label>Notiz</label>
+              <textarea id="empNote" class="small-area" placeholder="Hier Notiz eintragen..."></textarea>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn btn-primary" onclick="saveEmployee()">Speichern</button>
+            <button class="btn btn-secondary" onclick="fillEmployeeTemplate()">Vorlage erstellen</button>
+            <button class="btn btn-secondary" onclick="clearEmployeeForm()">Leeren</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="eventsSection" class="content-section">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Event eintragen</h2>
+            <p>Event erstellen und Teilnehmer hinzufügen.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label>Eventname</label>
+              <input id="eventName" type="text" />
+            </div>
+            <div class="field">
+              <label>Datum</label>
+              <input id="eventDate" type="date" />
+            </div>
+            <div class="field">
+              <label>Event Leiter</label>
+              <input id="eventLeader" type="text" />
+            </div>
+            <div class="field">
+              <label>Ergebnis</label>
+              <select id="eventResult">
+                <option value="Gewonnen">Gewonnen</option>
+                <option value="Verloren">Verloren</option>
+              </select>
+            </div>
+            <div class="field full-width">
+              <label>Teilnehmer (jede Zeile ein Name)</label>
+              <textarea id="eventParticipants" class="small-area" placeholder="Ali&#10;Max&#10;Hasan"></textarea>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn btn-primary" onclick="saveEvent()">Event speichern</button>
+            <button class="btn btn-secondary" onclick="fillEventTemplate()">Event Vorlage</button>
+            <button class="btn btn-secondary" onclick="clearEventForm()">Leeren</button>
+          </div>
+
+          <div class="sub-title">Gespeicherte Events</div>
+          <div id="eventsList" class="cards-list"></div>
+        </div>
+      </section>
+
+      <section id="sanctionsSection" class="content-section">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Sanktion eintragen</h2>
+            <p>Sanktionen speichern und Vorlage erstellen.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label>Name</label>
+              <input id="sanctionName" type="text" />
+            </div>
+            <div class="field">
+              <label>Datum</label>
+              <input id="sanctionDate" type="date" />
+            </div>
+            <div class="field">
+              <label>Stufe</label>
+              <input id="sanctionLevel" type="text" placeholder="z. B. 1/3" />
+            </div>
+            <div class="field">
+              <label>Strafe</label>
+              <input id="sanctionPenalty" type="text" />
+            </div>
+            <div class="field full-width">
+              <label>Anmerkung</label>
+              <textarea id="sanctionNote" class="small-area"></textarea>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn btn-primary" onclick="saveSanction()">Sanktion speichern</button>
+            <button class="btn btn-secondary" onclick="fillSanctionTemplate()">Sanktions Vorlage</button>
+            <button class="btn btn-secondary" onclick="clearSanctionForm()">Leeren</button>
+          </div>
+
+          <div class="sub-title">Gespeicherte Sanktionen</div>
+          <div id="sanctionsList" class="cards-list"></div>
+        </div>
+      </section>
+
+      <section id="templateSection" class="content-section">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Vorlagen</h2>
+            <p>Hier erscheinen Mitarbeiter-, Event- und Sanktions-Vorlagen.</p>
+          </div>
+
+          <textarea id="templateOutput" class="template-area" readonly placeholder="Die Vorlage erscheint hier..."></textarea>
+
+          <div class="button-row">
+            <button class="btn btn-primary" onclick="copyTemplate()">Vorlage kopieren</button>
+            <button class="btn btn-secondary" onclick="clearTemplate()">Leeren</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="usersSection" class="content-section">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Benutzerverwaltung</h2>
+            <p>Rollen ändern und Benutzer verwalten.</p>
+          </div>
+          <div id="usersList" class="users-grid"></div>
+        </div>
+      </section>
+
+      <section id="activitySection" class="content-section">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Aktivitätslog</h2>
+            <p>Letzte Aktionen im Dashboard.</p>
+          </div>
+          <div id="activityList" class="activity-list"></div>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <div id="employeeModal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2>Mitarbeiter Details</h2>
+        <button class="modal-close" onclick="closeEmployeeModal()">✕</button>
+      </div>
+      <div id="employeeModalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let editingEmployeeId = null;
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem("fib_users_ultimate")) || [];
+    }
+    function setUsers(users) {
+      localStorage.setItem("fib_users_ultimate", JSON.stringify(users));
+    }
+
+    function getEmployees() {
+      return JSON.parse(localStorage.getItem("fib_employees_ultimate")) || [];
+    }
+    function setEmployees(data) {
+      localStorage.setItem("fib_employees_ultimate", JSON.stringify(data));
+    }
+
+    function getEvents() {
+      return JSON.parse(localStorage.getItem("fib_events_ultimate")) || [];
+    }
+    function setEvents(data) {
+      localStorage.setItem("fib_events_ultimate", JSON.stringify(data));
+    }
+
+    function getSanctions() {
+      return JSON.parse(localStorage.getItem("fib_sanctions_ultimate")) || [];
+    }
+    function setSanctions(data) {
+      localStorage.setItem("fib_sanctions_ultimate", JSON.stringify(data));
+    }
+
+    function getLogs() {
+      return JSON.parse(localStorage.getItem("fib_logs_ultimate")) || [];
+    }
+    function setLogs(logs) {
+      localStorage.setItem("fib_logs_ultimate", JSON.stringify(logs));
+    }
+
+    function addLog(text) {
+      const logs = getLogs();
+      logs.unshift({
+        text,
+        time: new Date().toLocaleString("de-DE")
+      });
+      setLogs(logs);
+      renderActivity();
+    }
+
+    function initDefaultData() {
+      const users = getUsers();
+      if (users.length === 0) {
+        users.push(
+          { username: "admin", password: "admin123", role: "admin" },
+          { username: "moderator", password: "mod123", role: "moderator" },
+          { username: "user", password: "user123", role: "user" }
+        );
+        setUsers(users);
+      }
+
+      const employees = getEmployees();
+      if (employees.length === 0) {
+        setEmployees([
+          {
+            uid: Date.now() + 1,
+            name: "Ali Hasanov",
+            id: "1001",
+            dn: "21",
+            rank: "20 | Commander",
+            department: "Direction",
+            dfunk: "F-01",
+            intro: "Ja",
+            ga: "Bestanden",
+            exOfficer: "Nein",
+            appliedBy: "Admin",
+            note: "Beispiel Notiz",
+            createdBy: "admin",
+            createdAt: new Date().toLocaleString("de-DE")
+          }
+        ]);
+      }
+    }
+
+    function switchAuthTab(tab) {
+      document.querySelectorAll(".auth-tab").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".auth-panel").forEach(panel => panel.classList.remove("active"));
+
+      if (tab === "login") {
+        document.querySelectorAll(".auth-tab")[0].classList.add("active");
+        document.getElementById("loginPanel").classList.add("active");
+      } else {
+        document.querySelectorAll(".auth-tab")[1].classList.add("active");
+        document.getElementById("registerPanel").classList.add("active");
+      }
+    }
+
+    function register() {
+      const username = document.getElementById("registerUsername").value.trim();
+      const password = document.getElementById("registerPassword").value.trim();
+      const role = document.getElementById("registerRole").value;
+      const msg = document.getElementById("registerMsg");
+
+      if (!username || !password) {
+        msg.textContent = "Bitte alles ausfüllen.";
+        msg.style.color = "#ff7a7a";
+        return;
+      }
+
+      const users = getUsers();
+      if (users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
+        msg.textContent = "Benutzer existiert schon.";
+        msg.style.color = "#ff7a7a";
+        return;
+      }
+
+      users.push({ username, password, role });
+      setUsers(users);
+      addLog("Neuer Benutzer registriert: " + username + " (" + role + ")");
+      msg.textContent = "Registrierung erfolgreich.";
+      msg.style.color = "#7bffb2";
+
+      document.getElementById("registerUsername").value = "";
+      document.getElementById("registerPassword").value = "";
+      document.getElementById("registerRole").value = "user";
+
+      updateStats();
+      renderUsers();
+    }
+
+    function login() {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+      const msg = document.getElementById("loginMsg");
+
+      const user = getUsers().find(u => u.username === username && u.password === password);
+
+      if (!user) {
+        msg.textContent = "Falscher Benutzername oder Passwort.";
+        msg.style.color = "#ff7a7a";
+        return;
+      }
+
+      currentUser = user;
+      localStorage.setItem("fib_current_user_ultimate", JSON.stringify(user));
+      addLog("Benutzer eingeloggt: " + user.username);
+      showApp();
+    }
+
+    function logout() {
+      if (currentUser) addLog("Benutzer ausgeloggt: " + currentUser.username);
+      localStorage.removeItem("fib_current_user_ultimate");
+      currentUser = null;
+      document.getElementById("appPage").classList.remove("active");
+      document.getElementById("authPage").classList.add("active");
+    }
+
+    function showApp() {
+      document.getElementById("authPage").classList.remove("active");
+      document.getElementById("appPage").classList.add("active");
+
+      document.getElementById("currentUserName").textContent = currentUser.username;
+      document.getElementById("currentUserRole").textContent = currentUser.role;
+
+      document.querySelectorAll(".admin-only").forEach(el => {
+        if (currentUser.role === "admin") el.classList.remove("hidden");
+        else el.classList.add("hidden");
+      });
+
+      updateStats();
+      renderLatestEmployees();
+      renderLatestEvents();
+      renderEmployees();
+      renderEvents();
+      renderSanctions();
+      renderUsers();
+      renderActivity();
+      fillRankFilter();
+    }
+
+    function showSection(sectionId, btn) {
+      document.querySelectorAll(".content-section").forEach(section => section.classList.remove("active"));
+      document.getElementById(sectionId).classList.add("active");
+
+      document.querySelectorAll(".nav-btn").forEach(nav => nav.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+    }
+
+    function jumpToSection(sectionId) {
+      document.querySelectorAll(".content-section").forEach(section => section.classList.remove("active"));
+      document.getElementById(sectionId).classList.add("active");
+
+      document.querySelectorAll(".nav-btn").forEach(nav => nav.classList.remove("active"));
+      const btns = document.querySelectorAll(".nav-btn");
+      const map = {
+        overviewSection: 0,
+        employeesSection: 1,
+        addEmployeeSection: 2,
+        eventsSection: 3,
+        sanctionsSection: 4,
+        templateSection: 5,
+        usersSection: 6,
+        activitySection: 7
+      };
+      if (btns[map[sectionId]]) btns[map[sectionId]].classList.add("active");
+    }
+
+    function updateStats() {
+      document.getElementById("statEmployees").textContent = getEmployees().length;
+      document.getElementById("statUsers").textContent = getUsers().length;
+      document.getElementById("statEvents").textContent = getEvents().length;
+      document.getElementById("statSanctions").textContent = getSanctions().length;
+    }
+
+    function clearEmployeeForm() {
+      document.getElementById("empName").value = "";
+      document.getElementById("empId").value = "";
+      document.getElementById("empDn").value = "";
+      document.getElementById("empRank").value = "";
+      document.getElementById("empDepartment").value = "";
+      document.getElementById("empDfunk").value = "";
+      document.getElementById("empIntro").value = "";
+      document.getElementById("empGa").value = "";
+      document.getElementById("empExOfficer").value = "";
+      document.getElementById("empAppliedBy").value = "";
+      document.getElementById("empNote").value = "";
+      editingEmployeeId = null;
+    }
+
+    function saveEmployee() {
+      const name = document.getElementById("empName").value.trim();
+      const id = document.getElementById("empId").value.trim();
+      const dn = document.getElementById("empDn").value.trim();
+      const rank = document.getElementById("empRank").value;
+      const department = document.getElementById("empDepartment").value;
+      const dfunk = document.getElementById("empDfunk").value.trim();
+      const intro = document.getElementById("empIntro").value.trim();
+      const ga = document.getElementById("empGa").value.trim();
+      const exOfficer = document.getElementById("empExOfficer").value.trim();
+      const appliedBy = document.getElementById("empAppliedBy").value.trim();
+      const note = document.getElementById("empNote").value.trim();
+
+      if (!name || !id || !rank || !department) {
+        alert("Bitte mindestens Name, ID, Rang und Abteilung ausfüllen.");
+        return;
+      }
+
+      const employees = getEmployees();
+
+      if (editingEmployeeId) {
+        const index = employees.findIndex(e => e.uid === editingEmployeeId);
+        if (index !== -1) {
+          employees[index] = {
+            ...employees[index],
+            name,
+            id,
+            dn,
+            rank,
+            department,
+            dfunk,
+            intro,
+            ga,
+            exOfficer,
+            appliedBy,
+            note
+          };
+          addLog("Mitarbeiter bearbeitet: " + name);
+        }
+        editingEmployeeId = null;
+      } else {
+        employees.unshift({
+          uid: Date.now(),
+          name,
+          id,
+          dn,
+          rank,
+          department,
+          dfunk,
+          intro,
+          ga,
+          exOfficer,
+          appliedBy,
+          note,
+          createdBy: currentUser.username,
+          createdAt: new Date().toLocaleString("de-DE")
+        });
+        addLog("Neuer Mitarbeiter hinzugefügt: " + name);
+      }
+
+      setEmployees(employees);
+      fillEmployeeTemplate();
+      clearEmployeeForm();
+      updateStats();
+      renderLatestEmployees();
+      renderEmployees();
+      fillRankFilter();
+      alert("Mitarbeiter gespeichert.");
+    }
+
+    function fillEmployeeTemplate() {
+      const text = `Name: ${document.getElementById("empName").value}
+ID: ${document.getElementById("empId").value}
+DN: ${document.getElementById("empDn").value}
+Rang: ${document.getElementById("empRank").value}
+Abteilung: ${document.getElementById("empDepartment").value}
+DFunk: ${document.getElementById("empDfunk").value}
+Einführung: ${document.getElementById("empIntro").value}
+GA: ${document.getElementById("empGa").value}
+Ex Officer: ${document.getElementById("empExOfficer").value}
+Beworben Durch: ${document.getElementById("empAppliedBy").value}
+**Notiz:** ${document.getElementById("empNote").value}`;
+
+      document.getElementById("templateOutput").value = text;
+      jumpToSection("templateSection");
+    }
+
+    function renderEmployees() {
+      const wrapper = document.getElementById("employeesTableWrapper");
+      const search = document.getElementById("globalSearch").value.trim().toLowerCase();
+      const rankFilter = document.getElementById("rankFilter").value;
+
+      let employees = getEmployees().filter(emp => {
+        const searchText = (
+          (emp.name || "") + " " +
+          (emp.id || "") + " " +
+          (emp.rank || "") + " " +
+          (emp.department || "") + " " +
+          (emp.dn || "") + " " +
+          (emp.dfunk || "") + " " +
+          (emp.note || "")
+        ).toLowerCase();
+
+        const matchesSearch = searchText.includes(search);
+        const matchesRank = rankFilter ? emp.rank === rankFilter : true;
+        return matchesSearch && matchesRank;
+      });
+
+      if (employees.length === 0) {
+        wrapper.innerHTML = `<div class="empty-box">Keine Mitarbeiter gefunden.</div>`;
+        return;
+      }
+
+      wrapper.innerHTML = `
+        <table class="employee-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>ID</th>
+              <th>DN</th>
+              <th>Rang</th>
+              <th>Abteilung</th>
+              <th>DFunk</th>
+              <th>Notiz</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${employees.map(emp => `
+              <tr>
+                <td>${emp.name}</td>
+                <td>${emp.id}</td>
+                <td>${emp.dn}</td>
+                <td>${emp.rank}</td>
+                <td>${emp.department || "-"}</td>
+                <td>${emp.dfunk || "-"}</td>
+                <td>${emp.note ? emp.note.substring(0, 35) + (emp.note.length > 35 ? "..." : "") : "-"}</td>
+                <td class="actions-cell">
+                  <button class="mini-btn view" onclick="viewEmployee(${emp.uid})">Ansehen</button>
+                  <button class="mini-btn edit" onclick="editEmployee(${emp.uid})">Bearbeiten</button>
+                  <button class="mini-btn delete" onclick="deleteEmployee(${emp.uid})">Löschen</button>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderLatestEmployees() {
+      const list = document.getElementById("latestEmployees");
+      const employees = getEmployees().slice(0, 5);
+
+      if (employees.length === 0) {
+        list.innerHTML = `<div class="empty-box">Keine Mitarbeiter vorhanden.</div>`;
+        return;
+      }
+
+      list.innerHTML = employees.map(emp => `
+        <div class="simple-list-item">
+          <strong>${emp.name}</strong>
+          <span>${emp.rank} • ${emp.department || "Keine Abteilung"}</span>
+        </div>
+      `).join("");
+    }
+
+    function fillRankFilter() {
+      const select = document.getElementById("rankFilter");
+      const employees = getEmployees();
+      const ranks = [...new Set(employees.map(e => e.rank).filter(Boolean))];
+      const currentValue = select.value;
+
+      select.innerHTML = `<option value="">Alle Ränge</option>` +
+        ranks.map(rank => `<option value="${rank}">${rank}</option>`).join("");
+
+      select.value = currentValue;
+    }
+
+    function viewEmployee(uid) {
+      const emp = getEmployees().find(e => e.uid === uid);
+      if (!emp) return;
+
+      document.getElementById("employeeModalBody").innerHTML = `
+        <div class="detail-grid">
+          <div><strong>Name:</strong> ${emp.name}</div>
+          <div><strong>ID:</strong> ${emp.id}</div>
+          <div><strong>DN:</strong> ${emp.dn}</div>
+          <div><strong>Rang:</strong> ${emp.rank}</div>
+          <div><strong>Abteilung:</strong> ${emp.department || "-"}</div>
+          <div><strong>DFunk:</strong> ${emp.dfunk || "-"}</div>
+          <div><strong>Einführung:</strong> ${emp.intro || "-"}</div>
+          <div><strong>GA:</strong> ${emp.ga || "-"}</div>
+          <div><strong>Ex Officer:</strong> ${emp.exOfficer || "-"}</div>
+          <div><strong>Beworben durch:</strong> ${emp.appliedBy || "-"}</div>
+          <div class="full-modal-line"><strong>Notiz:</strong> ${emp.note || "-"}</div>
+          <div><strong>Erstellt von:</strong> ${emp.createdBy}</div>
+          <div><strong>Erstellt am:</strong> ${emp.createdAt}</div>
+        </div>
+      `;
+
+      document.getElementById("employeeModal").classList.remove("hidden");
+    }
+
+    function closeEmployeeModal() {
+      document.getElementById("employeeModal").classList.add("hidden");
+    }
+
+    function editEmployee(uid) {
+      const emp = getEmployees().find(e => e.uid === uid);
+      if (!emp) return;
+
+      editingEmployeeId = uid;
+      document.getElementById("empName").value = emp.name || "";
+      document.getElementById("empId").value = emp.id || "";
+      document.getElementById("empDn").value = emp.dn || "";
+      document.getElementById("empRank").value = emp.rank || "";
+      document.getElementById("empDepartment").value = emp.department || "";
+      document.getElementById("empDfunk").value = emp.dfunk || "";
+      document.getElementById("empIntro").value = emp.intro || "";
+      document.getElementById("empGa").value = emp.ga || "";
+      document.getElementById("empExOfficer").value = emp.exOfficer || "";
+      document.getElementById("empAppliedBy").value = emp.appliedBy || "";
+      document.getElementById("empNote").value = emp.note || "";
+
+      jumpToSection("addEmployeeSection");
+    }
+
+    function deleteEmployee(uid) {
+      if (!confirm("Mitarbeiter wirklich löschen?")) return;
+      let employees = getEmployees();
+      const emp = employees.find(e => e.uid === uid);
+      employees = employees.filter(e => e.uid !== uid);
+      setEmployees(employees);
+      if (emp) addLog("Mitarbeiter gelöscht: " + emp.name);
+
+      updateStats();
+      renderLatestEmployees();
+      renderEmployees();
+      fillRankFilter();
+    }
+
+    function clearEventForm() {
+      document.getElementById("eventName").value = "";
+      document.getElementById("eventDate").value = "";
+      document.getElementById("eventLeader").value = "";
+      document.getElementById("eventResult").value = "Gewonnen";
+      document.getElementById("eventParticipants").value = "";
+    }
+
+    function fillEventTemplate() {
+      const participants = document.getElementById("eventParticipants").value
+        .split("\n")
+        .map(p => p.trim())
+        .filter(Boolean);
+
+      const participantBlock = participants.length
+        ? participants.map(p => `> ${p}`).join("\n")
+        : "> ";
+
+      const text = `## --------------------------
+# Eventname: ${document.getElementById("eventName").value}
+### Datum: ${document.getElementById("eventDate").value}
+## Event Leiter: ${document.getElementById("eventLeader").value}
+
+\`\`\`${document.getElementById("eventResult").value}\`\`\`
+
+**Teilnehmer:**
+
+${participantBlock}`;
+
+      document.getElementById("templateOutput").value = text;
+      jumpToSection("templateSection");
+    }
+
+    function saveEvent() {
+      const name = document.getElementById("eventName").value.trim();
+      const date = document.getElementById("eventDate").value;
+      const leader = document.getElementById("eventLeader").value.trim();
+      const result = document.getElementById("eventResult").value;
+      const participants = document.getElementById("eventParticipants").value
+        .split("\n")
+        .map(p => p.trim())
+        .filter(Boolean);
+
+      if (!name || !date || !leader) {
+        alert("Bitte Eventname, Datum und Event Leiter ausfüllen.");
+        return;
+      }
+
+      const events = getEvents();
+      events.unshift({
+        uid: Date.now(),
+        name,
+        date,
+        leader,
+        result,
+        participants,
+        createdBy: currentUser.username,
+        createdAt: new Date().toLocaleString("de-DE")
+      });
+
+      setEvents(events);
+      addLog("Neues Event erstellt: " + name);
+
+      fillEventTemplate();
+      clearEventForm();
+      updateStats();
+      renderEvents();
+      renderLatestEvents();
+      alert("Event gespeichert.");
+    }
+
+    function renderEvents() {
+      const list = document.getElementById("eventsList");
+      const events = getEvents();
+
+      if (events.length === 0) {
+        list.innerHTML = `<div class="empty-box">Noch keine Events vorhanden.</div>`;
+        return;
+      }
+
+      list.innerHTML = events.map(event => `
+        <div class="info-card">
+          <div class="info-top">
+            <h3>${event.name}</h3>
+            <span class="result-badge ${event.result === 'Gewonnen' ? 'won' : 'lost'}">${event.result}</span>
+          </div>
+          <p><strong>Datum:</strong> ${event.date}</p>
+          <p><strong>Event Leiter:</strong> ${event.leader}</p>
+          <p><strong>Teilnehmer:</strong> ${event.participants.join(", ") || "-"}</p>
+          <p><strong>Erstellt von:</strong> ${event.createdBy}</p>
+          <div class="button-row mini-row">
+            <button class="mini-btn view" onclick="copyEventCard(${event.uid})">Vorlage</button>
+            <button class="mini-btn delete" onclick="deleteEvent(${event.uid})">Löschen</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderLatestEvents() {
+      const list = document.getElementById("latestEvents");
+      const events = getEvents().slice(0, 5);
+
+      if (events.length === 0) {
+        list.innerHTML = `<div class="empty-box">Keine Events vorhanden.</div>`;
+        return;
+      }
+
+      list.innerHTML = events.map(event => `
+        <div class="simple-list-item">
+          <strong>${event.name}</strong>
+          <span>${event.date} • ${event.result}</span>
+        </div>
+      `).join("");
+    }
+
+    function copyEventCard(uid) {
+      const event = getEvents().find(e => e.uid === uid);
+      if (!event) return;
+
+      const participantBlock = event.participants.length
+        ? event.participants.map(p => `> ${p}`).join("\n")
+        : "> ";
+
+      const text = `## --------------------------
+# Eventname: ${event.name}
+### Datum: ${event.date}
+## Event Leiter: ${event.leader}
+
+\`\`\`${event.result}\`\`\`
+
+**Teilnehmer:**
+
+${participantBlock}`;
+
+      document.getElementById("templateOutput").value = text;
+      jumpToSection("templateSection");
+    }
+
+    function deleteEvent(uid) {
+      if (!confirm("Event wirklich löschen?")) return;
+      let events = getEvents();
+      const event = events.find(e => e.uid === uid);
+      events = events.filter(e => e.uid !== uid);
+      setEvents(events);
+      if (event) addLog("Event gelöscht: " + event.name);
+
+      updateStats();
+      renderEvents();
+      renderLatestEvents();
+    }
+
+    function clearSanctionForm() {
+      document.getElementById("sanctionName").value = "";
+      document.getElementById("sanctionDate").value = "";
+      document.getElementById("sanctionLevel").value = "";
+      document.getElementById("sanctionPenalty").value = "";
+      document.getElementById("sanctionNote").value = "";
+    }
+
+    function fillSanctionTemplate() {
+      const text = `# Sanktion
+## Name: ${document.getElementById("sanctionName").value}
+**Datum:** ${document.getElementById("sanctionDate").value}
+**Stufe:** ${document.getElementById("sanctionLevel").value}
+**Strafe:** ${document.getElementById("sanctionPenalty").value}
+
+**Anmerkung:**
+${document.getElementById("sanctionNote").value}`;
+
+      document.getElementById("templateOutput").value = text;
+      jumpToSection("templateSection");
+    }
+
+    function saveSanction() {
+      const name = document.getElementById("sanctionName").value.trim();
+      const date = document.getElementById("sanctionDate").value;
+      const level = document.getElementById("sanctionLevel").value.trim();
+      const penalty = document.getElementById("sanctionPenalty").value.trim();
+      const note = document.getElementById("sanctionNote").value.trim();
+
+      if (!name || !date || !level || !penalty) {
+        alert("Bitte Name, Datum, Stufe und Strafe ausfüllen.");
+        return;
+      }
+
+      const sanctions = getSanctions();
+      sanctions.unshift({
+        uid: Date.now(),
+        name,
+        date,
+        level,
+        penalty,
+        note,
+        createdBy: currentUser.username,
+        createdAt: new Date().toLocaleString("de-DE")
+      });
+
+      setSanctions(sanctions);
+      addLog("Neue Sanktion erstellt für: " + name);
+
+      fillSanctionTemplate();
+      clearSanctionForm();
+      updateStats();
+      renderSanctions();
+      alert("Sanktion gespeichert.");
+    }
+
+    function renderSanctions() {
+      const list = document.getElementById("sanctionsList");
+      const sanctions = getSanctions();
+
+      if (sanctions.length === 0) {
+        list.innerHTML = `<div class="empty-box">Noch keine Sanktionen vorhanden.</div>`;
+        return;
+      }
+
+      list.innerHTML = sanctions.map(item => `
+        <div class="info-card">
+          <div class="info-top">
+            <h3>${item.name}</h3>
+            <span class="level-badge">${item.level}</span>
+          </div>
+          <p><strong>Datum:</strong> ${item.date}</p>
+          <p><strong>Strafe:</strong> ${item.penalty}</p>
+          <p><strong>Anmerkung:</strong> ${item.note || "-"}</p>
+          <p><strong>Erstellt von:</strong> ${item.createdBy}</p>
+          <div class="button-row mini-row">
+            <button class="mini-btn view" onclick="copySanctionCard(${item.uid})">Vorlage</button>
+            <button class="mini-btn delete" onclick="deleteSanction(${item.uid})">Löschen</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function copySanctionCard(uid) {
+      const item = getSanctions().find(s => s.uid === uid);
+      if (!item) return;
+
+      const text = `# Sanktion
+## Name: ${item.name}
+**Datum:** ${item.date}
+**Stufe:** ${item.level}
+**Strafe:** ${item.penalty}
+
+**Anmerkung:**
+${item.note}`;
+
+      document.getElementById("templateOutput").value = text;
+      jumpToSection("templateSection");
+    }
+
+    function deleteSanction(uid) {
+      if (!confirm("Sanktion wirklich löschen?")) return;
+      let sanctions = getSanctions();
+      const item = sanctions.find(s => s.uid === uid);
+      sanctions = sanctions.filter(s => s.uid !== uid);
+      setSanctions(sanctions);
+      if (item) addLog("Sanktion gelöscht: " + item.name);
+
+      updateStats();
+      renderSanctions();
+    }
+
+    function copyTemplate() {
+      const area = document.getElementById("templateOutput");
+      if (!area.value.trim()) {
+        alert("Keine Vorlage vorhanden.");
+        return;
+      }
+
+      area.select();
+      area.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      alert("Vorlage kopiert.");
+    }
+
+    function clearTemplate() {
+      document.getElementById("templateOutput").value = "";
+    }
+
+    function renderUsers() {
+      const list = document.getElementById("usersList");
+
+      if (currentUser.role !== "admin") {
+        list.innerHTML = `<div class="empty-box">Nur für Admins sichtbar.</div>`;
+        return;
+      }
+
+      const users = getUsers();
+      list.innerHTML = users.map((user, index) => `
+        <div class="user-card">
+          <div>
+            <h3>${user.username}</h3>
+            <p>Rolle: <strong>${user.role}</strong></p>
+          </div>
+          <div class="user-actions">
+            <select onchange="changeUserRole(${index}, this.value)">
+              <option value="user" ${user.role === "user" ? "selected" : ""}>User</option>
+              <option value="moderator" ${user.role === "moderator" ? "selected" : ""}>Moderator</option>
+              <option value="admin" ${user.role === "admin" ? "selected" : ""}>Admin</option>
+            </select>
+            ${user.username !== "admin" ? `<button class="btn btn-danger" onclick="deleteUser(${index})">Löschen</button>` : ""}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function changeUserRole(index, role) {
+      const users = getUsers();
+      const oldRole = users[index].role;
+      users[index].role = role;
+      setUsers(users);
+      addLog("Rolle geändert: " + users[index].username + " von " + oldRole + " zu " + role);
+
+      if (currentUser.username === users[index].username) {
+        currentUser.role = role;
+        localStorage.setItem("fib_current_user_ultimate", JSON.stringify(currentUser));
+        showApp();
+      } else {
+        renderUsers();
+      }
+    }
+
+    function deleteUser(index) {
+      const users = getUsers();
+      if (users[index].username === currentUser.username) {
+        alert("Du kannst deinen eigenen Benutzer nicht löschen.");
+        return;
+      }
+
+      addLog("Benutzer gelöscht: " + users[index].username);
+      users.splice(index, 1);
+      setUsers(users);
+      renderUsers();
+      updateStats();
+    }
+
+    function renderActivity() {
+      const list = document.getElementById("activityList");
+      const logs = getLogs().slice(0, 30);
+
+      if (logs.length === 0) {
+        list.innerHTML = `<div class="empty-box">Noch keine Aktivitäten vorhanden.</div>`;
+        return;
+      }
+
+      list.innerHTML = logs.map(log => `
+        <div class="activity-item">
+          <strong>${log.text}</strong>
+          <span>${log.time}</span>
+        </div>
+      `).join("");
+    }
+
+    window.onload = function () {
+      initDefaultData();
+
+      const savedUser = JSON.parse(localStorage.getItem("fib_current_user_ultimate"));
+      if (savedUser) {
+        currentUser = savedUser;
+        showApp();
+      }
+    };
+  </script>
+</body>
+</html>
